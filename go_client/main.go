@@ -9,7 +9,20 @@ import (
 	"github.com/senseyeio/roger"
 )
 
-func prompt(rClient roger.RClient) {
+type RServeConnect struct {
+	rClient roger.RClient
+}
+
+func (conn *RServeConnect) sendCommand(command string) {
+	value, err := conn.rClient.Eval(command)
+	if err != nil {
+		fmt.Println("Command failed: " + err.Error())
+	} else {
+		fmt.Println(value)
+	}
+}
+
+func (conn *RServeConnect) prompt() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("-> ")
@@ -20,26 +33,21 @@ func prompt(rClient roger.RClient) {
 		if strings.Compare("quit", text) == 0 {
 			break
 		}
-		send_command(text, rClient)
+		conn.sendCommand(text)
 	}
 }
 
-func send_command(command string, rClient roger.RClient) {
-	value, err := rClient.Eval(command)
+func NewPrompt(host string, port int) RServeConnect {
+
+	rClient, err := roger.NewRClient("127.0.0.1", 6311)
 	if err != nil {
-		fmt.Println("Command failed: " + err.Error())
-	} else {
-		fmt.Println(value) // 3.141592653589793
+		panic("Failed to connect")
 	}
+	return RServeConnect{rClient: rClient}
 }
 
 // https://www.rforge.net/Rserve/doc.html#cmdl
 func main() {
-	rClient, err := roger.NewRClient("127.0.0.1", 6311)
-	if err != nil {
-		fmt.Println("Failed to connect")
-		return
-	}
-
-	prompt(rClient)
+	conn := NewPrompt("127.0.0.1", 6311)
+	conn.prompt()
 }
