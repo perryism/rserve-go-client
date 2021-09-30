@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -37,9 +38,9 @@ func (conn *RServeConnect) prompt() {
 	}
 }
 
-func NewPrompt(host string, port int) RServeConnect {
+func NewPrompt(host string, port int64) RServeConnect {
 
-	rClient, err := roger.NewRClient("127.0.0.1", 6311)
+	rClient, err := roger.NewRClient(host, port)
 	if err != nil {
 		panic("Failed to connect")
 	}
@@ -48,6 +49,16 @@ func NewPrompt(host string, port int) RServeConnect {
 
 // https://www.rforge.net/Rserve/doc.html#cmdl
 func main() {
-	conn := NewPrompt("127.0.0.1", 6311)
-	conn.prompt()
+	port := flag.Int64("port", 6311, "port")
+	host := flag.String("host", "127.0.0.1", "host")
+	cmmd := flag.String("c", "", "Command")
+	flag.Parse()
+
+	conn := NewPrompt(*host, *port)
+
+	if len(*cmmd) == 0 {
+		conn.prompt()
+	} else {
+		conn.sendCommand(*cmmd)
+	}
 }
